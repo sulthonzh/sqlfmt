@@ -6,7 +6,6 @@
  * and common SQL expressions.
  */
 
-// ─── Tokens ────────────────────────────────────────────────────────
 type TokenType =
   | 'keyword'
   | 'whitespace'
@@ -48,22 +47,12 @@ const KEYWORDS = new Set([
   'MATERIALIZED', 'IF', 'TEMP', 'TEMPORARY', 'UNLOGGED',
 ]);
 
-const TOP_LEVEL = new Set([
-  'SELECT', 'FROM', 'WHERE', 'SET', 'GROUP BY', 'ORDER BY',
-  'HAVING', 'LIMIT', 'OFFSET', 'INSERT INTO', 'VALUES',
-  'UPDATE', 'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE',
-  'DROP TABLE', 'CREATE INDEX', 'UNION', 'UNION ALL',
-  'RETURNING', 'WITH',
-]);
-
 const MAJOR_KW = new Set([
   'SELECT', 'FROM', 'WHERE', 'GROUP', 'ORDER', 'HAVING',
   'LIMIT', 'OFFSET', 'INSERT', 'UPDATE', 'DELETE',
   'CREATE', 'ALTER', 'DROP', 'UNION', 'VALUES',
   'SET', 'RETURNING', 'WITH', 'INTO',
 ]);
-
-// ─── Tokenizer ─────────────────────────────────────────────────────
 
 function tokenize(sql: string): Token[] {
   const tokens: Token[] = [];
@@ -73,7 +62,6 @@ function tokenize(sql: string): Token[] {
   while (i < len) {
     const ch = sql[i];
 
-    // Whitespace
     if (/\s/.test(ch)) {
       let ws = '';
       while (i < len && /\s/.test(sql[i])) {
@@ -111,7 +99,6 @@ function tokenize(sql: string): Token[] {
       continue;
     }
 
-    // String literals
     if (ch === "'" || ch === '"') {
       const quote = ch;
       let val = quote;
@@ -128,7 +115,6 @@ function tokenize(sql: string): Token[] {
       continue;
     }
 
-    // Numbers
     if (/\d/.test(ch) || (ch === '.' && /\d/.test(sql[i + 1] ?? ''))) {
       let val = '';
       while (i < len && /[\d.eE]/.test(sql[i])) { val += sql[i]; i++; }
@@ -136,7 +122,6 @@ function tokenize(sql: string): Token[] {
       continue;
     }
 
-    // Identifiers / keywords
     if (/[a-zA-Z_]/.test(ch)) {
       let val = '';
       while (i < len && /[\w$]/.test(sql[i])) { val += sql[i]; i++; }
@@ -148,7 +133,6 @@ function tokenize(sql: string): Token[] {
       continue;
     }
 
-    // Operators
     if (ch === '<' || ch === '>' || ch === '=' || ch === '!') {
       let val = ch; i++;
       if (i < len && (sql[i] === '=' || sql[i] === '>')) { val += sql[i]; i++; }
@@ -159,7 +143,6 @@ function tokenize(sql: string): Token[] {
       tokens.push({ type: 'operator', value: '||' }); i += 2; continue;
     }
 
-    // Punctuation
     if ('(),.;:*+/-%'.includes(ch)) {
       tokens.push({ type: 'punctuation', value: ch }); i++; continue;
     }
@@ -170,8 +153,6 @@ function tokenize(sql: string): Token[] {
   return tokens;
 }
 
-// ─── Formatter options ─────────────────────────────────────────────
-
 export interface FormatOptions {
   indent?: string;     // default: 2 spaces
   uppercase?: boolean; // keywords uppercase, default true
@@ -179,8 +160,6 @@ export interface FormatOptions {
   maxColumnLength?: number; // wrap SELECT fields when line exceeds, default 80
   commaPosition?: 'after' | 'before'; // default: after
 }
-
-// ─── Formatter ─────────────────────────────────────────────────────
 
 function isKeyword(t: Token, kw: string): boolean {
   return t.type === 'keyword' && t.value.toUpperCase() === kw.toUpperCase();
@@ -215,10 +194,8 @@ export function format(sql: string, options: FormatOptions = {}): string {
   while (i < tokens.length) {
     const t = tokens[i];
 
-    // Skip whitespace tokens, we manage our own spacing
     if (t.type === 'whitespace') { i++; continue; }
 
-    // Comments: preserve inline, or push to own line
     if (t.type === 'comment') {
       if (!newline) emitSpace();
       emit(t.value);
@@ -239,7 +216,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
       continue;
     }
 
-    // Top-level major keywords
     if (t.type === 'keyword' && MAJOR_KW.has(t.value.toUpperCase())) {
       const upper = t.value.toUpperCase();
 
@@ -259,7 +235,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
         if (newline) emitIndent();
         emit(kw('UNION'));
         i++;
-        // check for ALL
         if (i + 1 < tokens.length && isKeyword(tokens[i + 1], 'ALL')) {
           emitSpace(); emit(kw('ALL'));
           i += 2;
@@ -273,9 +248,7 @@ export function format(sql: string, options: FormatOptions = {}): string {
         if (newline) emitIndent();
         emit(kw('INSERT')); emitSpace();
         i++;
-        // skip whitespace
         while (i < tokens.length && tokens[i].type === 'whitespace') i++;
-        // INTO
         if (i < tokens.length && isKeyword(tokens[i], 'INTO')) {
           emit(kw('INTO')); emitSpace(); i++;
         }
@@ -287,7 +260,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
         if (newline) emitIndent();
         emit(kw('DELETE')); emitSpace();
         i++;
-        // skip whitespace
         while (i < tokens.length && tokens[i].type === 'whitespace') i++;
         if (i < tokens.length && isKeyword(tokens[i], 'FROM')) {
           emit(kw('FROM')); emitSpace(); i++;
@@ -334,7 +306,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
 
     // Parentheses
     if (t.type === 'punctuation' && t.value === '(') {
-      // Check for subquery or function call
       emit('(');
       // Look ahead: if next meaningful token is SELECT, it's a subquery
       let j = i + 1;
@@ -348,7 +319,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
     if (t.type === 'punctuation' && t.value === ')') {
       // If we're in a subquery context, decrease depth
       if (depth > 0 && out.length > 0) {
-        // Check if we were in subquery
         let prevNonWs = out.length - 1;
         while (prevNonWs >= 0 && (out[prevNonWs] === ' ' || out[prevNonWs] === '\n' || out[prevNonWs] === indent)) {
           prevNonWs--;
@@ -363,7 +333,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
       i++; continue;
     }
 
-    // Commas in SELECT list
     if (t.type === 'punctuation' && t.value === ',') {
       if (commaPosition === 'before') {
         emitLine(); emitIndent();
@@ -376,7 +345,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
       i++; continue;
     }
 
-    // Default: emit token with proper spacing
     if (newline) emitIndent();
     else if (afterComma || t.type !== 'operator') emitSpace();
 
@@ -392,8 +360,6 @@ export function format(sql: string, options: FormatOptions = {}): string {
 
   return out.join('').trim() + '\n';
 }
-
-// ─── CLI ───────────────────────────────────────────────────────────
 
 export function formatFile(input: string, options: FormatOptions = {}): string {
   return format(input, options);
