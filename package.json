@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Zero-dependency SQL formatter and pretty printer",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
   "bin": { "sqlfmt": "dist/cli.js" },
   "scripts": { "build": "tsc", "test": "jest" },
   "keywords": ["sql", "formatter", "pretty-print", "beautifier"],
