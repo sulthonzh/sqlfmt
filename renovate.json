@@ -2,5 +2,16 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": [
+        "^6"
+      ],
+      "description": "Cap TS at ^6 until ts-jest supports v7 (flag #20/#27 class)"
+    }
   ]
 }

@@ -4,13 +4,38 @@
   "description": "Zero-dependency SQL formatter and pretty printer",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
-  "bin": { "sqlfmt": "dist/cli.js" },
-  "scripts": { "build": "tsc", "test": "jest" },
-  "keywords": ["sql", "formatter", "pretty-print", "beautifier"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "sqlfmt": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "sql",
+    "formatter",
+    "pretty-print",
+    "beautifier"
+  ],
   "author": "sulthonzh",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/sulthonzh/sqlfmt.git" },
-  "engines": { "node": ">=18.0.0" },
-  "devDependencies": { "typescript": "^7.0.0", "@types/node": "^24.0.0", "jest": "^30.0.0", "ts-jest": "^29.0.0", "@types/jest": "^30.0.0" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sulthonzh/sqlfmt.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "@types/node": "^24.0.0",
+    "jest": "^30.0.0",
+    "ts-jest": "^29.0.0",
+    "@types/jest": "^30.0.0"
+  }
 }
